@@ -1,65 +1,55 @@
-#include "bits/stdc++.h"
-
-using namespace std;
-
-template<typename T>
-void print(T t)
+while (!deliveries.empty())
 {
-    for (const auto &e : t) cout << e << " ";
-    cout << "\n";
-}
+    //pick the delivery which we have to do first
+    delivery t = deliveries1.front();
+    //deliveries 1 has list of deliveries sorted according to time according to time
 
-#define ll long long int
-#define mp make_pair
-#define all(v) v.begin(),v.end()
-#define eb emplace_back
-#define pb push_back
-#define len(v) ((ll)(v.size()))
+    //for each warehouse we also have deliveries sorted according to their time stamp in delware[i] for ith warehouse
 
-const ll MAX_SIZE = 1000005;
-const ll ninf = (-1) * (1ll << 60);
-const ll inf = 1ll << 60;
-const ll mod = 1000000007;
-
-bool subsetsum(ll a[], ll sum, ll n)
-{
-    bool t[n][sum + 1] = {0};
-    for (int i = 0; i < n; i++)
+    //pick the first drone that can do this delivery on time
+    drone selected;//selected drone
+    ware wh;//ware housee from which the drone starts
+    for (int i = 0; i < 5; i++) //6 drones are there
     {
-        t[i][0] = 1;
-    }
-    t[0][a[0]] = 1;
-    for (int i = 1; i < n; i++)
-    {
-        for (int j = 0; j < sum + 1; j++)
+        if (drone[i].can(t)) //if(drone i can do the delivery t in its time) starting form rest and full energy
         {
-            if (t[i - 1][j])
-            {
-                t[i][j] = 1;
-                if (j + a[i] < sum + 1) t[i][j + a[i]] = 1;
-            }
+            selected = drone[i];
+            selected.assign(t);//assign this delivery to selected drone
+            deliveries.pop_front();
+            wh = t.wh(); //the ware house frm which the drone starts
+            delware[wh].erase(t);//erasing the delivery as it is assigned
+            break;
         }
     }
-    return t[n - 1][sum];
-}
 
-void solve(ll TC)
-{
-    ll a[6] = {2, 5, 6, 9, 7, 3};
-    cout << subsetsum(a, 14, 6);
-}
-
-int main()
-{
-    ios_base::sync_with_stdio(false); cin.tie(0); cout.tie(0);
-
-    ll Tc = 1;
-    //cin >> Tc;
-
-    for (ll tc = 1; tc <= Tc; tc++)
+    //now assign as many deliveries to selected drone as you can for the same warehouse
+    //taking in acount the number of slots in drone
+    //also the deliveries should be on the same day as the first delivery
+    for (auto i : delware[wh])
     {
-        solve(tc);
+        if (selected.can(i))
+        {
+            //assign this delivery to selected drone
+            selected.assign(i);
+            deliveries.erase(i);
+            delware[wh].erase(i);
+            //from this we can calculate the resting time of drone as well
+        }
     }
+    //drone class data members
+    // 1.time
+    // 2.energy
+    // 3.path(with time stamps)
 
-    return 0;
+    // in assign method for a drone the following changes takes place
+    // 1.upto 3 mins of its arrival at the delivery(passed as a parameter) it is "booked"
+    // 2.energy changes takes place
+    // 3.path is added to the delivery point also considering the no-fly zones
+
+    //now the return path
+    //we simply return the rone to closest warehouse
+    selected.returned();
+
+    dronelist.pb(selected);//dronelist is the list of drones that we have to fly at last
+    //and every drone has its path encapsulated in it
 }
